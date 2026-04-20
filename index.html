@@ -2,67 +2,79 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BIOMETRIC ENROLLMENT - PROJECT X</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ENROLLMENT TERMINAL</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        body { background: #000; color: #00ff00; font-family: 'Courier New', monospace; padding: 20px; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #ff0000; }
-        input, select { width: 100%; padding: 12px; background: #111; border: 1px solid #00ff00; color: #fff; outline: none; box-sizing: border-box; }
-        .btn { width: 100%; padding: 15px; background: #00ff00; color: #000; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        #video { width: 100%; height: 200px; border: 1px solid #ff0000; object-fit: cover; margin-bottom: 10px; }
-        #photo-canvas { display: none; }
-        .status { color: yellow; font-size: 0.8rem; text-align: center; display: none; margin-top: 10px; }
+        * { box-sizing: border-box; touch-action: manipulation; }
+        body { 
+            background: #000; color: #00ff00; 
+            font-family: 'Courier New', Courier, monospace; 
+            margin: 0; padding: 20px; overflow: hidden;
+            height: 100vh; width: 100vw;
+        }
+        .container { border: 1px solid #00ff00; height: 100%; padding: 15px; position: relative; }
+        h2 { text-align: center; color: #ff0000; font-size: 1.2rem; margin-top: 0; }
+        input, select { 
+            width: 100%; padding: 12px; margin: 8px 0; 
+            background: #050505; border: 1px solid #00ff00; 
+            color: #fff; font-family: 'Courier New', monospace; font-weight: 200;
+        }
+        #video { width: 100%; height: 180px; border: 1px solid #ff0000; object-fit: cover; background: #111; }
+        .btn { 
+            width: 100%; padding: 15px; background: #00ff00; color: #000; 
+            border: none; font-weight: bold; cursor: pointer; margin-top: 10px;
+        }
+        #canvas { display: none; }
+        .overlay { font-size: 0.7rem; color: #ff0000; text-align: center; margin-top: 5px; }
     </style>
 </head>
-<body>
-    <h2 style="text-align:center; color: #ff0000;">[ IDENTITY ENROLLMENT ]</h2>
-    
-    <video id="video" autoplay playsinline></video>
-    <button class="btn" style="background: #333; color: #fff; font-size: 0.7rem;" onclick="takePhoto()">CAPTURE BIOMETRICS</button>
-    <canvas id="photo-canvas"></canvas>
-
-    <div class="form-group">
-        <label>FULL NAME</label>
-        <input type="text" id="p-name" placeholder="Name">
+<body onclick="toggleFullScreen()">
+    <div class="container">
+        <h2>[ SYSTEM ENROLLMENT ]</h2>
+        <video id="video" autoplay playsinline></video>
+        <div class="overlay">BIOMETRIC SCANNER ACTIVE</div>
+        
+        <input type="text" id="p-name" placeholder="FULL NAME">
+        <div style="display:flex; gap:5px;">
+            <input type="text" id="p-prov" placeholder="PROVINCE">
+            <input type="text" id="p-city" placeholder="CITY">
+        </div>
+        <div style="display:flex; gap:5px;">
+            <input type="date" id="p-dob">
+            <input type="number" id="p-age" placeholder="AGE">
+        </div>
+        <select id="p-gender">
+            <option value="MALE">MALE</option>
+            <option value="FEMALE">FEMALE</option>
+        </select>
+        
+        <button class="btn" id="sub-btn" onclick="takePhotoAndSave()">CONFIRM IDENTITY</button>
+        <canvas id="canvas"></canvas>
     </div>
-    <div style="display: flex; gap: 10px;">
-        <div class="form-group" style="flex: 1;"><label>PROVINCE</label><input type="text" id="p-prov"></div>
-        <div class="form-group" style="flex: 1;"><label>CITY</label><input type="text" id="p-city"></div>
-    </div>
-    <div style="display: flex; gap: 10px;">
-        <div class="form-group" style="flex: 1;"><label>BIRTHDATE</label><input type="date" id="p-dob"></div>
-        <div class="form-group" style="flex: 1;"><label>AGE</label><input type="number" id="p-age"></div>
-    </div>
-    <div class="form-group">
-        <label>GENDER</label>
-        <select id="p-gender"><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option></select>
-    </div>
-
-    <div id="status-msg" class="status">ENCRYPTING & UPLOADING DATA...</div>
-    <button class="btn" id="submit-btn" onclick="processRegistration()">CONFIRM IDENTITY</button>
 
     <script>
         emailjs.init("10QvwIDADoRTdj9Nh");
-
         const video = document.getElementById('video');
         navigator.mediaDevices.getUserMedia({ video: true }).then(s => video.srcObject = s);
 
-        function takePhoto() {
-            const canvas = document.getElementById('photo-canvas');
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
-            alert("BIOMETRIC CAPTURED.");
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            }
         }
 
-        async function processRegistration() {
-            const btn = document.getElementById('submit-btn');
-            const status = document.getElementById('status-msg');
-            const canvas = document.getElementById('photo-canvas');
+        async function takePhotoAndSave() {
+            const btn = document.getElementById('sub-btn');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            
+            const photoData = canvas.toDataURL('image/jpeg', 0.1);
             const code = Math.floor(10000 + Math.random() * 90000);
-
+            
             const formData = {
                 p_code: code,
                 p_name: document.getElementById('p-name').value,
@@ -71,27 +83,28 @@
                 p_dob: document.getElementById('p-dob').value,
                 p_age: document.getElementById('p-age').value,
                 p_gender: document.getElementById('p-gender').value,
-                p_photo: canvas.toDataURL('image/jpeg', 0.2), // Low quality for EmailJS safety
+                p_photo: photoData,
                 to_email: "refuerzojay7@gmail.com"
             };
 
-            if(!formData.p_name) { alert("ENTER NAME"); return; }
-
-            btn.disabled = true;
-            status.style.display = "block";
+            if(!formData.p_name) return alert("REQUIRED: NAME");
+            btn.disabled = true; btn.innerText = "UPLOADING...";
 
             try {
-                // 1. SAVE TO LOCALSTORAGE (Para sa Checker)
-                localStorage.setItem('player_' + code, JSON.stringify(formData));
+                // SEND TO SHEETDB
+                await fetch("https://sheetdb.io/api/v1/qb01yvtgmd5ta", {
+                    method: 'POST', headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ data: [formData] })
+                });
 
-                // 2. SEND TO EMAILJS (Gmail backup with Picture)
+                // SEND TO EMAILJS
                 await emailjs.send('service_njquc85', 'template_7nra9xd', formData);
 
-                alert("SUCCESS!\nCODE: " + code + "\nIdentity saved to Local Registry.");
+                alert("ENROLLMENT SUCCESSFUL\nCODE: " + code);
                 location.reload();
-            } catch (err) {
-                alert("Saved to local database, but Email failed (Check file size).");
-                location.reload();
+            } catch (e) {
+                alert("SYSTEM ERROR");
+                btn.disabled = false;
             }
         }
     </script>
